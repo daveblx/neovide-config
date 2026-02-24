@@ -288,7 +288,26 @@ end
 -- =========================
 local autopairs = safe_require("nvim-autopairs")
 if autopairs then autopairs.setup() end
-
+-- Tab to jump out of closing brackets
+vim.keymap.set('i', '<Tab>', function()
+    local closers = { ')', ']', '}', '"', "'", '`' }
+    local line = vim.api.nvim_get_current_line()
+    local col = vim.api.nvim_win_get_cursor(0)[2]
+    local next_char = line:sub(col + 1, col + 1)
+    for _, closer in ipairs(closers) do
+        if next_char == closer then
+            vim.api.nvim_win_set_cursor(0, { vim.api.nvim_win_get_cursor(0)[1], col + 1 })
+            return
+        end
+    end
+    -- fallback: insert a real tab / trigger completion
+    local cmp = safe_require("cmp")
+    if cmp and cmp.visible() then
+        cmp.select_next_item()
+    else
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Tab>', true, false, true), 'n', false)
+    end
+end, { desc = 'Smart tab' })
 -- =========================
 -- INDENT GUIDES
 -- =========================
